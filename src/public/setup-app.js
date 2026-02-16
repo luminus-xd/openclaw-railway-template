@@ -11,6 +11,8 @@
     statusEl.textContent = s;
   }
 
+  var showAllAuthMethods = false;
+
   function renderAuth(groups) {
     authGroupEl.innerHTML = '';
     for (var i = 0; i < groups.length; i++) {
@@ -28,17 +30,60 @@
       }
       authChoiceEl.innerHTML = '';
       var opts = (sel && sel.options) ? sel.options : [];
+      
+      // Filter out interactive OAuth options unless "Show all" is enabled
+      var filteredOpts = [];
+      var hiddenCount = 0;
+      
       for (var k = 0; k < opts.length; k++) {
         var o = opts[k];
+        var isInteractive = (
+          o.value.toLowerCase().indexOf('cli') >= 0 ||
+          o.value.toLowerCase().indexOf('oauth') >= 0 ||
+          o.value.toLowerCase().indexOf('device') >= 0 ||
+          o.value.toLowerCase().indexOf('codex') >= 0 ||
+          o.value.toLowerCase().indexOf('antigravity') >= 0 ||
+          o.value.toLowerCase().indexOf('gemini-cli') >= 0 ||
+          o.value.toLowerCase().indexOf('qwen-portal') >= 0 ||
+          o.value.toLowerCase().indexOf('github-copilot') >= 0
+        );
+        
+        if (!isInteractive || showAllAuthMethods) {
+          filteredOpts.push(o);
+        } else {
+          hiddenCount++;
+        }
+      }
+      
+      // Render filtered options
+      for (var m = 0; m < filteredOpts.length; m++) {
         var opt2 = document.createElement('option');
-        opt2.value = o.value;
-        opt2.textContent = o.label + (o.hint ? ' - ' + o.hint : '');
+        opt2.value = filteredOpts[m].value;
+        opt2.textContent = filteredOpts[m].label + (filteredOpts[m].hint ? ' - ' + filteredOpts[m].hint : '');
         authChoiceEl.appendChild(opt2);
+      }
+      
+      // Add "Show all auth methods" option if there are hidden options
+      if (hiddenCount > 0 && !showAllAuthMethods) {
+        var showAllOpt = document.createElement('option');
+        showAllOpt.value = '__show_all__';
+        showAllOpt.textContent = '⚠️ Show all auth methods (' + hiddenCount + ' hidden - require terminal/OAuth)';
+        showAllOpt.style.fontWeight = 'bold';
+        showAllOpt.style.color = '#ff9800';
+        authChoiceEl.appendChild(showAllOpt);
       }
     };
 
     authGroupEl.onchange();
   }
+
+  // Handle "Show all auth methods" selection
+  authChoiceEl.onchange = function () {
+    if (authChoiceEl.value === '__show_all__') {
+      showAllAuthMethods = true;
+      authGroupEl.onchange(); // Re-render with all options
+    }
+  };
 
   function httpJson(url, opts) {
     opts = opts || {};
@@ -55,21 +100,48 @@
 
   function loadAuthGroups() {
     return httpJson('/setup/api/auth-groups').then(function (j) {
-      renderAuth(j.authGroups || []);
+      if (!j.authGroups || j.authGroups.length === 0) {
+        console.warn('Auth groups empty, trying status endpoint...');
+        throw new Error('Empty auth groups');
+      }
+      renderAuth(j.authGroups);
     }).catch(function (e) {
-      console.error('Failed to load auth groups:', e);
+      console.error('Failed to load auth groups from fast endpoint:', e);
       // Fallback to loading from status if fast endpoint fails
       return httpJson('/setup/api/status').then(function (j) {
+        if (!j.authGroups || j.authGroups.length === 0) {
+          console.warn('Auth groups empty in status endpoint too');
+          setStatus('Warning: Unable to load provider list. Setup wizard may not work correctly.');
+        }
         renderAuth(j.authGroups || []);
+      }).catch(function (e2) {
+        console.error('Failed to load auth groups from status endpoint:', e2);
+        setStatus('Warning: Unable to load provider list. Setup wizard may not work correctly.');
+        renderAuth([]); // Render empty to unblock UI
       });
     });
   }
 
   function refreshStatus() {
     setStatus('Loading...');
+    var statusDetailsEl = document.getElementById('statusDetails');
+    if (statusDetailsEl) {
+      statusDetailsEl.innerHTML = '';
+    }
+
     return httpJson('/setup/api/status').then(function (j) {
       var ver = j.openclawVersion ? (' | ' + j.openclawVersion) : '';
       setStatus((j.configured ? 'Configured - open /openclaw' : 'Not configured - run setup below') + ver);
+      
+      // Show gateway target and health hints
+      if (statusDetailsEl) {
+        var detailsHtml = '<div class="muted" style="font-size: 0.9em;">';
+        detailsHtml += '<strong>Gateway Target:</strong> <code>' + (j.gatewayTarget || 'unknown') + '</code><br/>';
+        detailsHtml += '<strong>Health Check:</strong> <a href="/healthz" target="_blank">/healthz</a> (shows gateway diagnostics)';
+        detailsHtml += '</div>';
+        statusDetailsEl.innerHTML = detailsHtml;
+      }
+
       // If channels are unsupported, surface it for debugging.
       if (j.channelsAddHelp && j.channelsAddHelp.indexOf('telegram') === -1) {
         logEl.textContent += '\nNote: this openclaw build does not list telegram in `channels add --help`. Telegram auto-add will be skipped.\n';
@@ -77,6 +149,9 @@
 
     }).catch(function (e) {
       setStatus('Error: ' + String(e));
+      if (statusDetailsEl) {
+        statusDetailsEl.innerHTML = '<div style="color: #d32f2f;">Failed to load status details</div>';
+      }
     });
   }
 
@@ -88,7 +163,13 @@
       telegramToken: document.getElementById('telegramToken').value,
       discordToken: document.getElementById('discordToken').value,
       slackBotToken: document.getElementById('slackBotToken').value,
-      slackAppToken: document.getElementById('slackAppToken').value
+      slackAppToken: document.getElementById('slackAppToken').value,
+      // Custom provider fields
+      customProviderId: document.getElementById('customProviderId').value,
+      customProviderBaseUrl: document.getElementById('customProviderBaseUrl').value,
+      customProviderApi: document.getElementById('customProviderApi').value,
+      customProviderApiKeyEnv: document.getElementById('customProviderApiKeyEnv').value,
+      customProviderModelId: document.getElementById('customProviderModelId').value
     };
 
     logEl.textContent = 'Running...\n';

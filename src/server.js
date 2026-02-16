@@ -118,6 +118,112 @@ function clawArgs(args) {
   return [OPENCLAW_ENTRY, ...args];
 }
 
+// ========== AUTH PROVIDER GROUPS ==========
+// Hardcoded auth provider groups for setup wizard (avoids CLI dependency for UI rendering).
+// This matches Openclaw's auth-choice grouping logic for consistency.
+const AUTH_GROUPS = [
+  {
+    value: "openai",
+    label: "OpenAI",
+    hint: "Codex OAuth + API key",
+    options: [
+      { value: "codex-cli", label: "OpenAI Codex OAuth (Codex CLI)" },
+      { value: "openai-codex", label: "OpenAI Codex (ChatGPT OAuth)" },
+      { value: "openai-api-key", label: "OpenAI API key" },
+    ],
+  },
+  {
+    value: "anthropic",
+    label: "Anthropic",
+    hint: "Claude Code CLI + API key",
+    options: [
+      { value: "claude-cli", label: "Anthropic token (Claude Code CLI)" },
+      { value: "token", label: "Anthropic token (paste setup-token)" },
+      { value: "apiKey", label: "Anthropic API key" },
+    ],
+  },
+  {
+    value: "google",
+    label: "Google",
+    hint: "Gemini API key + OAuth",
+    options: [
+      { value: "gemini-api-key", label: "Google Gemini API key" },
+      { value: "google-antigravity", label: "Google Antigravity OAuth" },
+      { value: "google-gemini-cli", label: "Google Gemini CLI OAuth" },
+    ],
+  },
+  {
+    value: "openrouter",
+    label: "OpenRouter",
+    hint: "API key",
+    options: [{ value: "openrouter-api-key", label: "OpenRouter API key" }],
+  },
+  {
+    value: "ai-gateway",
+    label: "Vercel AI Gateway",
+    hint: "API key",
+    options: [
+      { value: "ai-gateway-api-key", label: "Vercel AI Gateway API key" },
+    ],
+  },
+  {
+    value: "moonshot",
+    label: "Moonshot AI",
+    hint: "Kimi K2 + Kimi Code",
+    options: [
+      { value: "moonshot-api-key", label: "Moonshot AI API key" },
+      { value: "kimi-code-api-key", label: "Kimi Code API key" },
+    ],
+  },
+  {
+    value: "zai",
+    label: "Z.AI (GLM 4.7)",
+    hint: "API key",
+    options: [{ value: "zai-api-key", label: "Z.AI (GLM 4.7) API key" }],
+  },
+  {
+    value: "minimax",
+    label: "MiniMax",
+    hint: "M2.1 (recommended)",
+    options: [
+      { value: "minimax-api", label: "MiniMax M2.1" },
+      { value: "minimax-api-lightning", label: "MiniMax M2.1 Lightning" },
+    ],
+  },
+  {
+    value: "qwen",
+    label: "Qwen",
+    hint: "OAuth",
+    options: [{ value: "qwen-portal", label: "Qwen OAuth" }],
+  },
+  {
+    value: "copilot",
+    label: "Copilot",
+    hint: "GitHub + local proxy",
+    options: [
+      {
+        value: "github-copilot",
+        label: "GitHub Copilot (GitHub device login)",
+      },
+      { value: "copilot-proxy", label: "Copilot Proxy (local)" },
+    ],
+  },
+  {
+    value: "synthetic",
+    label: "Synthetic",
+    hint: "Anthropic-compatible (multi-model)",
+    options: [{ value: "synthetic-api-key", label: "Synthetic API key" }],
+  },
+  {
+    value: "opencode-zen",
+    label: "OpenCode Zen",
+    hint: "API key",
+    options: [
+      { value: "opencode-zen", label: "OpenCode Zen (multi-model proxy)" },
+    ],
+  },
+];
+
 // Returns all candidate config paths in priority order.
 // Supports explicit override + legacy config file migration.
 function resolveConfigCandidates() {
@@ -534,123 +640,38 @@ app.get("/setup", requireSetupAuth, (_req, res) => {
 });
 
 app.get("/setup/api/status", requireSetupAuth, async (_req, res) => {
-  const version = await runCmd(OPENCLAW_NODE, clawArgs(["--version"]));
-  const channelsHelp = await runCmd(
-    OPENCLAW_NODE,
-    clawArgs(["channels", "add", "--help"]),
-  );
+  // Resilient version check with timeout and fallback
+  let openclawVersion = "unknown";
+  try {
+    const version = await runCmd(OPENCLAW_NODE, clawArgs(["--version"]), { timeoutMs: 5000 });
+    if (version.code === 0 && version.output?.trim()) {
+      openclawVersion = version.output.trim();
+    }
+  } catch (err) {
+    console.warn(`[status] Failed to get openclaw version: ${err.message}`);
+  }
 
-  // We reuse Openclaw's own auth-choice grouping logic indirectly by hardcoding the same group defs.
-  // This is intentionally minimal; later we can parse the CLI help output to stay perfectly in sync.
-  const authGroups = [
-    {
-      value: "openai",
-      label: "OpenAI",
-      hint: "Codex OAuth + API key",
-      options: [
-        { value: "codex-cli", label: "OpenAI Codex OAuth (Codex CLI)" },
-        { value: "openai-codex", label: "OpenAI Codex (ChatGPT OAuth)" },
-        { value: "openai-api-key", label: "OpenAI API key" },
-      ],
-    },
-    {
-      value: "anthropic",
-      label: "Anthropic",
-      hint: "Claude Code CLI + API key",
-      options: [
-        { value: "claude-cli", label: "Anthropic token (Claude Code CLI)" },
-        { value: "token", label: "Anthropic token (paste setup-token)" },
-        { value: "apiKey", label: "Anthropic API key" },
-      ],
-    },
-    {
-      value: "google",
-      label: "Google",
-      hint: "Gemini API key + OAuth",
-      options: [
-        { value: "gemini-api-key", label: "Google Gemini API key" },
-        { value: "google-antigravity", label: "Google Antigravity OAuth" },
-        { value: "google-gemini-cli", label: "Google Gemini CLI OAuth" },
-      ],
-    },
-    {
-      value: "openrouter",
-      label: "OpenRouter",
-      hint: "API key",
-      options: [{ value: "openrouter-api-key", label: "OpenRouter API key" }],
-    },
-    {
-      value: "ai-gateway",
-      label: "Vercel AI Gateway",
-      hint: "API key",
-      options: [
-        { value: "ai-gateway-api-key", label: "Vercel AI Gateway API key" },
-      ],
-    },
-    {
-      value: "moonshot",
-      label: "Moonshot AI",
-      hint: "Kimi K2 + Kimi Code",
-      options: [
-        { value: "moonshot-api-key", label: "Moonshot AI API key" },
-        { value: "kimi-code-api-key", label: "Kimi Code API key" },
-      ],
-    },
-    {
-      value: "zai",
-      label: "Z.AI (GLM 4.7)",
-      hint: "API key",
-      options: [{ value: "zai-api-key", label: "Z.AI (GLM 4.7) API key" }],
-    },
-    {
-      value: "minimax",
-      label: "MiniMax",
-      hint: "M2.1 (recommended)",
-      options: [
-        { value: "minimax-api", label: "MiniMax M2.1" },
-        { value: "minimax-api-lightning", label: "MiniMax M2.1 Lightning" },
-      ],
-    },
-    {
-      value: "qwen",
-      label: "Qwen",
-      hint: "OAuth",
-      options: [{ value: "qwen-portal", label: "Qwen OAuth" }],
-    },
-    {
-      value: "copilot",
-      label: "Copilot",
-      hint: "GitHub + local proxy",
-      options: [
-        {
-          value: "github-copilot",
-          label: "GitHub Copilot (GitHub device login)",
-        },
-        { value: "copilot-proxy", label: "Copilot Proxy (local)" },
-      ],
-    },
-    {
-      value: "synthetic",
-      label: "Synthetic",
-      hint: "Anthropic-compatible (multi-model)",
-      options: [{ value: "synthetic-api-key", label: "Synthetic API key" }],
-    },
-    {
-      value: "opencode-zen",
-      label: "OpenCode Zen",
-      hint: "API key",
-      options: [
-        { value: "opencode-zen", label: "OpenCode Zen (multi-model proxy)" },
-      ],
-    },
-  ];
+  // Resilient channels help check with timeout and fallback
+  let channelsAddHelp = "";
+  try {
+    const channelsHelpResult = await runCmd(
+      OPENCLAW_NODE,
+      clawArgs(["channels", "add", "--help"]),
+      { timeoutMs: 5000 }
+    );
+    if (channelsHelpResult.code === 0) {
+      channelsAddHelp = channelsHelpResult.output;
+    }
+  } catch (err) {
+    console.warn(`[status] Failed to get channels help: ${err.message}`);
+  }
 
   res.json({
     configured: isConfigured(),
     gatewayTarget: GATEWAY_TARGET,
-    openclawVersion: version.output.trim(),
-    channelsAddHelp: channelsHelp.output,
-    authGroups,
+    openclawVersion,
+    channelsAddHelp,
+    authGroups: AUTH_GROUPS, // Use constant instead of inline definition
   });
 });
 
@@ -703,8 +724,12 @@ function buildOnboardArgs(payload) {
     // Validate: if user selected an auth choice that requires a secret, fail fast
     if (requiresSecret.includes(payload.authChoice) && !secret) {
       throw new Error(
-        `Auth choice "${payload.authChoice}" requires an API key or token, but none was provided. ` +
-        `Please provide the secret in the setup form.`
+        `Missing auth secret for authChoice=${payload.authChoice}.\n` +
+        `Please provide your API key or token in the "Key / Token" field above.\n\n` +
+        `Troubleshooting:\n` +
+        `- Ensure you've pasted the API key correctly (no extra spaces)\n` +
+        `- Check the provider's documentation for how to obtain the key\n` +
+        `- Verify the key is valid and not expired`
       );
     }
     
@@ -939,6 +964,102 @@ app.post("/setup/api/run", requireSetupAuth, async (req, res) => {
           JSON.stringify(["127.0.0.1"]),
         ]),
       );
+
+      // ========== CUSTOM PROVIDER CONFIGURATION ==========
+      // Add custom OpenAI-compatible provider if provided
+      if (payload.customProviderId?.trim()) {
+        const providerId = payload.customProviderId.trim();
+        const baseUrl = payload.customProviderBaseUrl?.trim();
+        const api = payload.customProviderApi?.trim();
+        const apiKeyEnv = payload.customProviderApiKeyEnv?.trim();
+        const modelId = payload.customProviderModelId?.trim();
+
+        // Validation: Provider ID (alphanumeric + underscore + dash)
+        if (!/^[A-Za-z0-9_-]+$/.test(providerId)) {
+          throw new Error(
+            `Invalid custom provider ID "${providerId}". Must contain only alphanumeric characters, underscores, and dashes.`
+          );
+        }
+
+        // Validation: Base URL (must start with http:// or https://)
+        if (!baseUrl || !/^https?:\/\/.+/.test(baseUrl)) {
+          throw new Error(
+            `Invalid custom provider base URL "${baseUrl || '(empty)'}". Must start with http:// or https://.`
+          );
+        }
+
+        // Validation: API type (must be openai-completions or openai-responses)
+        if (api !== "openai-completions" && api !== "openai-responses") {
+          throw new Error(
+            `Invalid custom provider API type "${api || '(empty)'}". Must be "openai-completions" or "openai-responses".`
+          );
+        }
+
+        // Validation: API key env var (optional, but must match pattern if provided)
+        if (apiKeyEnv && !/^[A-Z_][A-Z0-9_]*$/.test(apiKeyEnv)) {
+          throw new Error(
+            `Invalid API key environment variable name "${apiKeyEnv}". Must be uppercase with underscores (e.g., MY_API_KEY).`
+          );
+        }
+
+        console.log(`[custom-provider] Configuring custom provider: ${providerId}`);
+        console.log(`[custom-provider]   Base URL: ${baseUrl}`);
+        console.log(`[custom-provider]   API: ${api}`);
+        console.log(`[custom-provider]   API Key Env: ${apiKeyEnv || '(none)'}`);
+        console.log(`[custom-provider]   Model ID: ${modelId || '(none)'}`);
+
+        // Build provider config object
+        const providerConfig = {
+          api,
+          baseUrl,
+        };
+
+        // Add API key if provided (use env var interpolation)
+        if (apiKeyEnv) {
+          providerConfig.apiKey = `\${${apiKeyEnv}}`;
+        }
+
+        // Add default model if provided
+        if (modelId) {
+          providerConfig.models = {
+            [modelId]: {
+              id: modelId,
+            },
+          };
+        }
+
+        // Write provider config to models.providers.{providerId}
+        const setProviderResult = await runCmd(
+          OPENCLAW_NODE,
+          clawArgs([
+            "config",
+            "set",
+            "--json",
+            `models.providers.${providerId}`,
+            JSON.stringify(providerConfig),
+          ]),
+        );
+
+        extra += `\n[custom-provider] exit=${setProviderResult.code}\n${setProviderResult.output || "(no output)"}`;
+
+        if (setProviderResult.code !== 0) {
+          throw new Error(`Failed to configure custom provider: ${setProviderResult.output}`);
+        }
+
+        // Set models.mode to "merge" to prevent overwriting other providers
+        const setModeResult = await runCmd(
+          OPENCLAW_NODE,
+          clawArgs(["config", "set", "models.mode", "merge"]),
+        );
+
+        extra += `\n[custom-provider] Set models.mode=merge: exit=${setModeResult.code}\n${setModeResult.output || "(no output)"}`;
+
+        if (setModeResult.code !== 0) {
+          console.warn(`[custom-provider] Failed to set models.mode=merge: ${setModeResult.output}`);
+        }
+
+        console.log(`[custom-provider] ✓ Custom provider "${providerId}" configured successfully`);
+      }
 
       const channelsHelp = await runCmd(
         OPENCLAW_NODE,
@@ -1825,8 +1946,20 @@ proxy.on("error", (err, req, res) => {
   // Only send error response if headers haven't been sent yet
   if (res && !res.headersSent) {
     try {
+      const troubleshooting = [
+        `Proxy error: ${err.message}`,
+        "",
+        "Gateway may not be ready or has crashed.",
+        "",
+        "Troubleshooting:",
+        "- Visit /healthz for gateway status",
+        "- Visit /setup/api/debug for full diagnostics",
+        "- Check Debug Console in /setup",
+        "- Run 'gateway.restart' in Debug Console",
+      ].join("\n");
+      
       res.writeHead(502, { "Content-Type": "text/plain" });
-      res.end(`Proxy error: ${err.message}\nGateway may not be ready. Check /healthz for status.`);
+      res.end(troubleshooting);
     } catch {
       // Response already partially sent, can't recover
     }
@@ -1857,21 +1990,24 @@ app.use(async (req, res) => {
     try {
       await ensureGatewayRunning();
     } catch (err) {
-      // Provide helpful troubleshooting hints
+      // Provide helpful troubleshooting hints with actionable steps
       const errorMsg = [
-        "Gateway failed to start or is not ready.",
+        "Gateway not ready.",
         "",
         `Error: ${String(err)}`,
         "",
-        "Troubleshooting steps:",
-        "1. Check /healthz for gateway diagnostics",
-        "2. Verify OPENCLAW_STATE_DIR is writable",
-        "3. Check Railway logs for gateway startup errors",
-        "4. Ensure openclaw.json is valid JSON",
+        "Troubleshooting:",
+        "- Visit /setup and check the Debug Console",
+        "- Run 'openclaw doctor' in Debug Console to diagnose issues",
+        "- Visit /setup/api/debug for full diagnostics",
+        "- Check /healthz for gateway status and reachability",
+        "- Visit /setup Config Editor to verify openclaw.json is valid",
         "",
-        lastGatewayError ? `Last gateway error: ${lastGatewayError}` : "",
-        lastGatewayExit ? `Last gateway exit: code=${lastGatewayExit.code} signal=${lastGatewayExit.signal} at=${lastGatewayExit.at}` : "",
-        lastDoctorOutput ? `\nRecent diagnostics:\n${lastDoctorOutput.slice(0, 1000)}` : "",
+        "Recent gateway diagnostics:",
+        lastGatewayError ? `  Last error: ${lastGatewayError}` : "",
+        lastGatewayExit ? `  Last exit: code=${lastGatewayExit.code} signal=${lastGatewayExit.signal} at=${lastGatewayExit.at}` : "",
+        "",
+        lastDoctorOutput ? `Doctor output (last 500 chars):\n${lastDoctorOutput.slice(0, 500)}` : "Run 'openclaw doctor' in Debug Console for detailed diagnostics",
       ]
         .filter(Boolean)
         .join("\n");
