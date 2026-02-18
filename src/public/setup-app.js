@@ -67,7 +67,7 @@
       if (hiddenCount > 0 && !showAllAuthMethods) {
         var showAllOpt = document.createElement('option');
         showAllOpt.value = '__show_all__';
-        showAllOpt.textContent = '⚠️ Show all auth methods (' + hiddenCount + ' hidden - require terminal/OAuth)';
+        showAllOpt.textContent = '⚠️ すべての認証方式を表示（' + hiddenCount + '件非表示 - ターミナル/OAuthが必要）';
         showAllOpt.style.fontWeight = 'bold';
         showAllOpt.style.color = '#ff9800';
         authChoiceEl.appendChild(showAllOpt);
@@ -111,12 +111,12 @@
       return httpJson('/setup/api/status').then(function (j) {
         if (!j.authGroups || j.authGroups.length === 0) {
           console.warn('Auth groups empty in status endpoint too');
-          setStatus('Warning: Unable to load provider list. Setup wizard may not work correctly.');
+          setStatus('警告：プロバイダーリストを読み込めませんでした。セットアップウィザードが正常に動作しない場合があります。');
         }
         renderAuth(j.authGroups || []);
       }).catch(function (e2) {
         console.error('Failed to load auth groups from status endpoint:', e2);
-        setStatus('Warning: Unable to load provider list. Setup wizard may not work correctly.');
+        setStatus('警告：プロバイダーリストを読み込めませんでした。セットアップウィザードが正常に動作しない場合があります。');
         renderAuth([]); // Render empty to unblock UI
       });
     });
@@ -131,26 +131,26 @@
 
     return httpJson('/setup/api/status').then(function (j) {
       var ver = j.openclawVersion ? (' | ' + j.openclawVersion) : '';
-      setStatus((j.configured ? 'Configured - open /openclaw' : 'Not configured - run setup below') + ver);
+      setStatus((j.configured ? '設定済み - /openclawを開いてください' : '未設定 - 下のセットアップを実行してください') + ver);
       
       // Show gateway target and health hints
       if (statusDetailsEl) {
         var detailsHtml = '<div class="muted" style="font-size: 0.9em;">';
-        detailsHtml += '<strong>Gateway Target:</strong> <code>' + (j.gatewayTarget || 'unknown') + '</code><br/>';
-        detailsHtml += '<strong>Health Check:</strong> <a href="/healthz" target="_blank">/healthz</a> (shows gateway diagnostics)';
+        detailsHtml += '<strong>ゲートウェイターゲット：</strong> <code>' + (j.gatewayTarget || '不明') + '</code><br/>';
+        detailsHtml += '<strong>ヘルスチェック：</strong> <a href="/healthz" target="_blank">/healthz</a>（ゲートウェイ診断を表示）';
         detailsHtml += '</div>';
         statusDetailsEl.innerHTML = detailsHtml;
       }
 
       // If channels are unsupported, surface it for debugging.
       if (j.channelsAddHelp && j.channelsAddHelp.indexOf('telegram') === -1) {
-        logEl.textContent += '\nNote: this openclaw build does not list telegram in `channels add --help`. Telegram auto-add will be skipped.\n';
+        logEl.textContent += '\n注意：このOpenclawビルドは`channels add --help`にTelegramが含まれていません。Telegram自動追加はスキップされます。\n';
       }
 
     }).catch(function (e) {
       setStatus('Error: ' + String(e));
       if (statusDetailsEl) {
-        statusDetailsEl.innerHTML = '<div style="color: #d32f2f;">Failed to load status details</div>';
+        statusDetailsEl.innerHTML = '<div style="color: #d32f2f;">ステータスの詳細を読み込めませんでした</div>';
       }
     });
   }
@@ -172,7 +172,7 @@
       customProviderModelId: document.getElementById('customProviderModelId').value
     };
 
-    logEl.textContent = 'Running...\n';
+    logEl.textContent = '実行中...\n';
 
     fetch('/setup/api/run', {
       method: 'POST',
@@ -195,16 +195,16 @@
   var pairingBtn = document.getElementById('pairingApprove');
   if (pairingBtn) {
     pairingBtn.onclick = function () {
-      var channel = prompt('Enter channel (telegram or discord):');
+      var channel = prompt('チャンネルを入力（telegram または discord）：');
       if (!channel) return;
       channel = channel.trim().toLowerCase();
       if (channel !== 'telegram' && channel !== 'discord') {
-        alert('Channel must be "telegram" or "discord"');
+        alert('チャンネルは"telegram"または"discord"を入力してください');
         return;
       }
-      var code = prompt('Enter pairing code (e.g. 3EY4PUYS):');
+      var code = prompt('ペアリングコードを入力（例：3EY4PUYS）：');
       if (!code) return;
-      logEl.textContent += '\nApproving pairing for ' + channel + '...\n';
+      logEl.textContent += '\nペアリングを承認中：' + channel + '...\n';
       fetch('/setup/api/pairing/approve', {
         method: 'POST',
         credentials: 'same-origin',
@@ -217,8 +217,8 @@
   }
 
   document.getElementById('reset').onclick = function () {
-    if (!confirm('Reset setup? This deletes the config file so onboarding can run again.')) return;
-    logEl.textContent = 'Resetting...\n';
+    if (!confirm('セットアップをリセットしますか？設定ファイルが削除され、オンボーディングを再実行できます。')) return;
+    logEl.textContent = 'リセット中...\n';
     fetch('/setup/api/reset', { method: 'POST', credentials: 'same-origin' })
       .then(function (res) { return res.text(); })
       .then(function (t) { logEl.textContent += t + '\n'; return refreshStatus(); })
@@ -236,14 +236,14 @@
     var arg = consoleArgEl.value.trim();
 
     if (!command) {
-      consoleOutputEl.textContent = 'Error: Please select a command';
+      consoleOutputEl.textContent = 'エラー：コマンドを選択してください';
       return;
     }
 
     // Disable button and show loading state
     consoleRunBtn.disabled = true;
-    consoleRunBtn.textContent = 'Running...';
-    consoleOutputEl.textContent = 'Executing command...\n';
+    consoleRunBtn.textContent = '実行中...';
+    consoleOutputEl.textContent = 'コマンドを実行中...\n';
 
     fetch('/setup/api/console/run', {
       method: 'POST',
@@ -265,19 +265,19 @@
         }
 
         if (j.ok) {
-          consoleOutputEl.textContent = j.output || '(no output)';
+          consoleOutputEl.textContent = j.output || '（出力なし）';
         } else {
-          consoleOutputEl.textContent = 'Error: ' + (j.error || j.output || 'Unknown error');
+          consoleOutputEl.textContent = 'エラー：' + (j.error || j.output || '不明なエラー');
         }
 
         // Re-enable button
         consoleRunBtn.disabled = false;
-        consoleRunBtn.textContent = 'Run Command';
+        consoleRunBtn.textContent = 'コマンドを実行';
       })
       .catch(function (e) {
-        consoleOutputEl.textContent = 'Error: ' + String(e);
+        consoleOutputEl.textContent = 'エラー：' + String(e);
         consoleRunBtn.disabled = false;
-        consoleRunBtn.textContent = 'Run Command';
+        consoleRunBtn.textContent = 'コマンドを実行';
       });
   }
 
@@ -299,7 +299,7 @@
   var configOutputEl = document.getElementById('configOutput');
 
   function loadConfig() {
-    configOutputEl.textContent = 'Loading config...';
+    configOutputEl.textContent = '設定を読み込み中...';
     configReloadBtn.disabled = true;
     configSaveBtn.disabled = true;
 
@@ -324,19 +324,19 @@
           configPathEl.textContent = j.path || 'Unknown';
           configContentEl.value = j.content || '';
           if (j.exists) {
-            configOutputEl.textContent = 'Config loaded successfully';
+            configOutputEl.textContent = '設定を読み込みました';
           } else {
-            configOutputEl.textContent = 'Config file does not exist yet. Run onboarding first.';
+            configOutputEl.textContent = '設定ファイルが見つかりません。先にオンボーディングを実行してください。';
           }
         } else {
-          configOutputEl.textContent = 'Error: ' + (j.error || 'Unknown error');
+          configOutputEl.textContent = 'エラー：' + (j.error || '不明なエラー');
         }
 
         configReloadBtn.disabled = false;
         configSaveBtn.disabled = false;
       })
       .catch(function (e) {
-        configOutputEl.textContent = 'Error: ' + String(e);
+        configOutputEl.textContent = 'エラー：' + String(e);
         configReloadBtn.disabled = false;
         configSaveBtn.disabled = false;
       });
@@ -345,10 +345,10 @@
   function saveConfig() {
     var content = configContentEl.value;
 
-    configOutputEl.textContent = 'Saving config...';
+    configOutputEl.textContent = '設定を保存中...';
     configReloadBtn.disabled = true;
     configSaveBtn.disabled = true;
-    configSaveBtn.textContent = 'Saving...';
+    configSaveBtn.textContent = '保存中...';
 
     fetch('/setup/api/config/raw', {
       method: 'POST',
@@ -370,20 +370,20 @@
         }
 
         if (j.ok) {
-          configOutputEl.textContent = 'Success: ' + (j.message || 'Config saved') + '\n' + (j.restartOutput || '');
+          configOutputEl.textContent = '成功：' + (j.message || '設定を保存しました') + '\n' + (j.restartOutput || '');
         } else {
-          configOutputEl.textContent = 'Error: ' + (j.error || 'Unknown error');
+          configOutputEl.textContent = 'エラー：' + (j.error || '不明なエラー');
         }
 
         configReloadBtn.disabled = false;
         configSaveBtn.disabled = false;
-        configSaveBtn.textContent = 'Save & restart gateway';
+        configSaveBtn.textContent = '保存してゲートウェイを再起動';
       })
       .catch(function (e) {
-        configOutputEl.textContent = 'Error: ' + String(e);
+        configOutputEl.textContent = 'エラー：' + String(e);
         configReloadBtn.disabled = false;
         configSaveBtn.disabled = false;
-        configSaveBtn.textContent = 'Save & restart gateway';
+        configSaveBtn.textContent = '保存してゲートウェイを再起動';
       });
   }
 
@@ -405,10 +405,10 @@
   function refreshDevices() {
     if (!devicesListEl) return;
 
-    devicesListEl.innerHTML = '<p class="muted">Loading...</p>';
+    devicesListEl.innerHTML = '<p class="muted">読み込み中...</p>';
     if (devicesRefreshBtn) {
       devicesRefreshBtn.disabled = true;
-      devicesRefreshBtn.textContent = 'Loading...';
+      devicesRefreshBtn.textContent = '読み込み中...';
     }
 
     fetch('/setup/api/devices/pending', {
@@ -430,18 +430,18 @@
 
         if (j.ok) {
           if (j.requestIds && j.requestIds.length > 0) {
-            var html = '<p class="muted">Found ' + j.requestIds.length + ' pending device(s):</p>';
+            var html = '<p class="muted">' + j.requestIds.length + '件の保留中デバイスが見つかりました：</p>';
             html += '<ul style="list-style: none; padding: 0;">';
             for (var i = 0; i < j.requestIds.length; i++) {
               var reqId = j.requestIds[i];
               html += '<li id="device-' + reqId + '" style="padding: 0.5rem; margin-bottom: 0.5rem; background: #f5f5f5; border-radius: 4px;">';
               html += '<code style="font-weight: bold;">' + reqId + '</code> ';
-              html += '<button class="approve-device" data-requestid="' + reqId + '" style="margin-left: 0.5rem;">Approve</button>';
+              html += '<button class="approve-device" data-requestid="' + reqId + '" style="margin-left: 0.5rem;">承認</button>';
               html += '</li>';
             }
             html += '</ul>';
-            html += '<details style="margin-top: 0.75rem;"><summary style="cursor: pointer;">Show raw output</summary>';
-            html += '<pre style="margin-top: 0.5rem; background: #f5f5f5; padding: 0.5rem; border-radius: 4px; font-size: 11px; max-height: 200px; overflow-y: auto;">' + (j.output || '(no output)') + '</pre>';
+            html += '<details style="margin-top: 0.75rem;"><summary style="cursor: pointer;">生の出力を表示</summary>';
+            html += '<pre style="margin-top: 0.5rem; background: #f5f5f5; padding: 0.5rem; border-radius: 4px; font-size: 11px; max-height: 200px; overflow-y: auto;">' + (j.output || '（出力なし）') + '</pre>';
             html += '</details>';
             devicesListEl.innerHTML = html;
 
@@ -455,9 +455,9 @@
               };
             }
           } else {
-            devicesListEl.innerHTML = '<p class="muted">No pending devices found.</p>';
+            devicesListEl.innerHTML = '<p class="muted">保留中のデバイスは見つかりませんでした。</p>';
             if (j.output) {
-              devicesListEl.innerHTML += '<details style="margin-top: 0.5rem;"><summary style="cursor: pointer;">Show raw output</summary>';
+              devicesListEl.innerHTML += '<details style="margin-top: 0.5rem;"><summary style="cursor: pointer;">生の出力を表示</summary>';
               devicesListEl.innerHTML += '<pre style="margin-top: 0.5rem; background: #f5f5f5; padding: 0.5rem; border-radius: 4px; font-size: 11px; max-height: 200px; overflow-y: auto;">' + j.output + '</pre>';
               devicesListEl.innerHTML += '</details>';
             }
@@ -468,21 +468,21 @@
 
         if (devicesRefreshBtn) {
           devicesRefreshBtn.disabled = false;
-          devicesRefreshBtn.textContent = 'Refresh pending devices';
+          devicesRefreshBtn.textContent = '保留中のデバイスを更新';
         }
       })
       .catch(function (e) {
-        devicesListEl.innerHTML = '<p style="color: #d32f2f;">Error: ' + String(e) + '</p>';
+        devicesListEl.innerHTML = '<p style="color: #d32f2f;">エラー：' + String(e) + '</p>';
         if (devicesRefreshBtn) {
           devicesRefreshBtn.disabled = false;
-          devicesRefreshBtn.textContent = 'Refresh pending devices';
+          devicesRefreshBtn.textContent = '保留中のデバイスを更新';
         }
       });
   }
 
   function approveDevice(requestId, buttonEl) {
     buttonEl.disabled = true;
-    buttonEl.textContent = 'Approving...';
+    buttonEl.textContent = '承認中...';
 
     fetch('/setup/api/devices/approve', {
       method: 'POST',
@@ -510,18 +510,18 @@
             deviceEl.style.background = '#4caf50';
             deviceEl.style.color = '#fff';
           }
-          buttonEl.textContent = 'Approved ✓';
+          buttonEl.textContent = '承認済み ✓';
           buttonEl.disabled = true;
         } else {
-          buttonEl.textContent = 'Failed';
+          buttonEl.textContent = '失敗';
           buttonEl.disabled = false;
-          alert('Approval failed: ' + (j.error || j.output || 'Unknown error'));
+          alert('承認に失敗しました：' + (j.error || j.output || '不明なエラー'));
         }
       })
       .catch(function (e) {
-        buttonEl.textContent = 'Error';
+        buttonEl.textContent = 'エラー';
         buttonEl.disabled = false;
-        alert('Error: ' + String(e));
+        alert('エラー：' + String(e));
       });
   }
 
@@ -538,42 +538,42 @@
     var file = importFileEl.files[0];
     
     if (!file) {
-      importOutputEl.textContent = 'Error: Please select a file';
+      importOutputEl.textContent = 'エラー：ファイルを選択してください';
       return;
     }
 
     // Validate file type
     var fileName = file.name.toLowerCase();
     if (!fileName.endsWith('.tar.gz') && !fileName.endsWith('.tgz')) {
-      importOutputEl.textContent = 'Error: File must be a .tar.gz or .tgz archive';
+      importOutputEl.textContent = 'エラー：ファイルは.tar.gzまたは.tgzアーカイブである必要があります';
       return;
     }
 
     // Validate file size (250MB max)
     var maxSize = 250 * 1024 * 1024;
     if (file.size > maxSize) {
-      importOutputEl.textContent = 'Error: File size exceeds 250MB limit (got ' + Math.round(file.size / 1024 / 1024) + 'MB)';
+      importOutputEl.textContent = 'エラー：ファイルサイズが250MBの制限を超えています（' + Math.round(file.size / 1024 / 1024) + 'MB）';
       return;
     }
 
     // Confirmation dialog
-    var confirmMsg = 'Import backup from "' + file.name + '"?\n\n' +
-                     'This will:\n' +
-                     '- Stop the gateway\n' +
-                     '- Overwrite existing config and workspace\n' +
-                     '- Restart the gateway\n' +
-                     '- Reload this page\n\n' +
-                     'Are you sure?';
-    
+    var confirmMsg = '"' + file.name + '"からバックアップをインポートしますか？\n\n' +
+                     '以下の処理が行われます：\n' +
+                     '- ゲートウェイを停止\n' +
+                     '- 既存の設定とワークスペースを上書き\n' +
+                     '- ゲートウェイを再起動\n' +
+                     '- このページを再読み込み\n\n' +
+                     '続行しますか？';
+
     if (!confirm(confirmMsg)) {
-      importOutputEl.textContent = 'Import cancelled';
+      importOutputEl.textContent = 'インポートをキャンセルしました';
       return;
     }
 
     // Disable button and show progress
     importButtonEl.disabled = true;
-    importButtonEl.textContent = 'Importing...';
-    importOutputEl.textContent = 'Uploading ' + file.name + ' (' + Math.round(file.size / 1024 / 1024) + 'MB)...\n';
+    importButtonEl.textContent = 'インポート中...';
+    importOutputEl.textContent = file.name + '（' + Math.round(file.size / 1024 / 1024) + 'MB）をアップロード中...\n';
 
     // Upload file
     fetch('/setup/import', {
@@ -598,22 +598,22 @@
         }
 
         if (j.ok) {
-          importOutputEl.textContent = 'Success: ' + (j.message || 'Import completed') + '\n\nReloading page in 2 seconds...';
-          
+          importOutputEl.textContent = '成功：' + (j.message || 'インポートが完了しました') + '\n\n2秒後にページを再読み込みします...';
+
           // Reload page after successful import to show fresh state
           setTimeout(function () {
             window.location.reload();
           }, 2000);
         } else {
-          importOutputEl.textContent = 'Error: ' + (j.error || 'Import failed');
+          importOutputEl.textContent = 'エラー：' + (j.error || 'インポートに失敗しました');
           importButtonEl.disabled = false;
-          importButtonEl.textContent = 'Import backup';
+          importButtonEl.textContent = 'バックアップをインポート';
         }
       })
       .catch(function (e) {
-        importOutputEl.textContent = 'Error: ' + String(e);
+        importOutputEl.textContent = 'エラー：' + String(e);
         importButtonEl.disabled = false;
-        importButtonEl.textContent = 'Import backup';
+        importButtonEl.textContent = 'バックアップをインポート';
       });
   }
 

@@ -1,122 +1,122 @@
 <!doctype html>
-<html>
+<html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Openclaw Setup</title>
+  <title>Openclaw セットアップ</title>
   <link rel="stylesheet" href="/setup/styles.css" />
 </head>
 <body>
-  <h1>Openclaw Setup</h1>
-  <p class="muted">This wizard configures Openclaw by running the same onboarding command it uses in the terminal, but from the browser.</p>
+  <h1>Openclaw セットアップ</h1>
+  <p class="muted">このウィザードは、ターミナルで実行するのと同じオンボーディングコマンドをブラウザから実行してOpenclawを設定します。</p>
 
   <div class="card">
-    <h2>Status</h2>
-    <div id="status">Loading...</div>
+    <h2>ステータス</h2>
+    <div id="status">読み込み中...</div>
     <div id="statusDetails" style="margin-top: 0.75rem; padding: 0.75rem; background: #f5f5f5; border-radius: 4px;"></div>
     <div style="margin-top: 0.75rem">
-      <a href="/openclaw" target="_blank">Open Openclaw UI</a>
+      <a href="/openclaw" target="_blank">Openclaw UIを開く</a>
       &nbsp;|&nbsp;
-      <a href="/setup/export" target="_blank">Download backup (.tar.gz)</a>
+      <a href="/setup/export" target="_blank">バックアップをダウンロード（.tar.gz）</a>
       &nbsp;|&nbsp;
-      <a href="/healthz" target="_blank">Health Check</a>
+      <a href="/healthz" target="_blank">ヘルスチェック</a>
     </div>
     <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #ddd;">
       <p class="muted" style="margin: 0;">
-        Want to contribute? Check out the <a href="https://github.com/moltinginstar/moltbot/blob/main/CONTRIBUTING.md" target="_blank">Contributing Guide</a>
+        貢献したいですか？ <a href="https://github.com/moltinginstar/moltbot/blob/main/CONTRIBUTING.md" target="_blank">コントリビューティングガイド</a>をご覧ください。
       </p>
     </div>
-    
+
     <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #ddd;">
-      <h3 style="margin-top: 0; font-size: 1rem;">Import Backup</h3>
-      <p class="muted">Restore config and workspace from a previous backup. This will overwrite existing data.</p>
-      
-      <label>Backup file (.tar.gz)</label>
+      <h3 style="margin-top: 0; font-size: 1rem;">バックアップのインポート</h3>
+      <p class="muted">以前のバックアップから設定とワークスペースを復元します。既存のデータは上書きされます。</p>
+
+      <label>バックアップファイル（.tar.gz）</label>
       <input id="importFile" type="file" accept=".tar.gz,.tgz,application/gzip,application/x-gzip" />
-      
-      <button id="importButton">Import backup</button>
+
+      <button id="importButton">バックアップをインポート</button>
       <pre id="importOutput" style="margin-top: 1rem; max-height: 200px; overflow-y: auto; background: #f5f5f5; padding: 0.75rem; border-radius: 4px;"></pre>
     </div>
   </div>
 
   <div class="card">
-    <h2>Debug Console</h2>
-    <p class="muted">Run OpenClaw commands without SSH access. All commands are allowlisted for security.</p>
-    
-    <label>Command</label>
+    <h2>デバッグコンソール</h2>
+    <p class="muted">SSHアクセスなしでOpenClawコマンドを実行します。すべてのコマンドはセキュリティのために許可リストに登録されています。</p>
+
+    <label>コマンド</label>
     <select id="consoleCommand">
-      <option value="">-- Select command --</option>
-      <optgroup label="Gateway Lifecycle">
-        <option value="gateway.restart">gateway.restart - Restart gateway process</option>
-        <option value="gateway.stop">gateway.stop - Stop gateway process</option>
-        <option value="gateway.start">gateway.start - Start gateway process</option>
+      <option value="">-- コマンドを選択 --</option>
+      <optgroup label="ゲートウェイライフサイクル">
+        <option value="gateway.restart">gateway.restart - ゲートウェイプロセスを再起動</option>
+        <option value="gateway.stop">gateway.stop - ゲートウェイプロセスを停止</option>
+        <option value="gateway.start">gateway.start - ゲートウェイプロセスを開始</option>
       </optgroup>
-      <optgroup label="OpenClaw Status">
-        <option value="openclaw.version">openclaw.version - Show OpenClaw version</option>
-        <option value="openclaw.status">openclaw.status - Show gateway status</option>
-        <option value="openclaw.health">openclaw.health - Run health check</option>
-        <option value="openclaw.doctor">openclaw.doctor - Run diagnostics</option>
+      <optgroup label="OpenClawステータス">
+        <option value="openclaw.version">openclaw.version - OpenClawバージョンを表示</option>
+        <option value="openclaw.status">openclaw.status - ゲートウェイステータスを表示</option>
+        <option value="openclaw.health">openclaw.health - ヘルスチェックを実行</option>
+        <option value="openclaw.doctor">openclaw.doctor - 診断を実行</option>
       </optgroup>
-      <optgroup label="Logs & Config">
-        <option value="openclaw.logs.tail">openclaw.logs.tail - Show recent logs (arg: count)</option>
-        <option value="openclaw.config.get">openclaw.config.get - Get config value (arg: path)</option>
+      <optgroup label="ログと設定">
+        <option value="openclaw.logs.tail">openclaw.logs.tail - 最近のログを表示（引数：件数）</option>
+        <option value="openclaw.config.get">openclaw.config.get - 設定値を取得（引数：パス）</option>
       </optgroup>
-      <optgroup label="Devices">
-        <option value="openclaw.devices.list">openclaw.devices.list - List devices</option>
-        <option value="openclaw.devices.approve">openclaw.devices.approve - Approve device (arg: requestId)</option>
+      <optgroup label="デバイス">
+        <option value="openclaw.devices.list">openclaw.devices.list - デバイス一覧を表示</option>
+        <option value="openclaw.devices.approve">openclaw.devices.approve - デバイスを承認（引数：requestId）</option>
       </optgroup>
-      <optgroup label="Plugins">
-        <option value="openclaw.plugins.list">openclaw.plugins.list - List plugins</option>
-        <option value="openclaw.plugins.enable">openclaw.plugins.enable - Enable plugin (arg: name)</option>
+      <optgroup label="プラグイン">
+        <option value="openclaw.plugins.list">openclaw.plugins.list - プラグイン一覧を表示</option>
+        <option value="openclaw.plugins.enable">openclaw.plugins.enable - プラグインを有効化（引数：名前）</option>
       </optgroup>
     </select>
-    
-    <label>Argument (if required)</label>
-    <input id="consoleArg" type="text" placeholder="e.g., 50 for logs tail, gateway.port for config get, requestId for device approve" />
+
+    <label>引数（必要な場合）</label>
+    <input id="consoleArg" type="text" placeholder="例：ログ件数には50、設定パスにはgateway.port、デバイス承認にはrequestId" />
     <div class="muted" style="margin-top: 0.25rem">
-      Some commands require arguments: logs tail (count), config get (path), devices approve (requestId), plugins enable (name).
+      一部のコマンドには引数が必要です：ログ件数（件数）、設定取得（パス）、デバイス承認（requestId）、プラグイン有効化（名前）。
     </div>
-    
-    <button id="consoleRun">Run Command</button>
+
+    <button id="consoleRun">コマンドを実行</button>
     <pre id="consoleOutput" style="margin-top: 1rem; max-height: 400px; overflow-y: auto; background: #f5f5f5; padding: 0.75rem; border-radius: 4px;"></pre>
   </div>
 
   <div class="card">
-    <h2>Config Editor</h2>
-    <p class="muted">Edit openclaw.json directly. Automatic backups are created before saving. Gateway restarts automatically after save.</p>
-    
+    <h2>設定エディター</h2>
+    <p class="muted">openclaw.jsonを直接編集します。保存前に自動バックアップが作成されます。保存後にゲートウェイは自動的に再起動します。</p>
+
     <div class="muted" style="margin-bottom: 0.5rem">
-      Config file: <code id="configPath">Loading...</code>
+      設定ファイル：<code id="configPath">読み込み中...</code>
     </div>
-    
-    <label>JSON Configuration</label>
+
+    <label>JSON設定</label>
     <textarea id="configContent" style="font-family: 'Monaco', 'Menlo', 'Consolas', monospace; font-size: 12px; height: 260px; resize: vertical;"></textarea>
-    
+
     <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-      <button id="configReload">Reload from disk</button>
-      <button id="configSave">Save & restart gateway</button>
+      <button id="configReload">ディスクから再読み込み</button>
+      <button id="configSave">保存してゲートウェイを再起動</button>
     </div>
-    
+
     <pre id="configOutput" style="margin-top: 1rem; max-height: 200px; overflow-y: auto; background: #f5f5f5; padding: 0.75rem; border-radius: 4px;"></pre>
   </div>
 
   <div class="card">
-    <h2>1) Model/auth provider</h2>
-    <p class="muted">Matches the groups shown in the terminal onboarding.</p>
-    <label>Provider group</label>
+    <h2>1) モデル/認証プロバイダー</h2>
+    <p class="muted">ターミナルのオンボーディングで表示されるグループと対応しています。</p>
+    <label>プロバイダーグループ</label>
     <select id="authGroup">
-      <option value="">Select provider group...</option>
+      <option value="">プロバイダーグループを選択...</option>
     </select>
 
-    <label>Auth method</label>
+    <label>認証方式</label>
     <select id="authChoice">
-      <option value="">Select auth method...</option>
+      <option value="">認証方式を選択...</option>
     </select>
 
-    <label>Key / Token (if required)</label>
-    <input id="authSecret" type="password" placeholder="Paste API key / token if applicable" />
+    <label>キー / トークン（必要な場合）</label>
+    <input id="authSecret" type="password" placeholder="APIキー / トークンを貼り付け（該当する場合）" />
 
-    <label>Wizard flow</label>
+    <label>ウィザードフロー</label>
     <select id="flow">
       <option value="quickstart">quickstart</option>
       <option value="advanced">advanced</option>
@@ -125,78 +125,78 @@
   </div>
 
   <div class="card">
-    <h2>2) Optional: Channels</h2>
-    <p class="muted">You can also add channels later inside Openclaw, but this helps you get messaging working immediately.</p>
+    <h2>2) オプション：チャンネル</h2>
+    <p class="muted">チャンネルはOpenclawの中で後から追加することもできますが、ここで設定するとすぐにメッセージングが使えるようになります。</p>
 
-    <label>Telegram bot token (optional)</label>
+    <label>Telegramボットトークン（オプション）</label>
     <input id="telegramToken" type="password" placeholder="123456:ABC..." />
     <div class="muted" style="margin-top: 0.25rem">
-      Get it from BotFather: open Telegram, message <code>@BotFather</code>, run <code>/newbot</code>, then copy the token.
+      BotFatherから取得：Telegramを開いて <code>@BotFather</code> にメッセージを送り、<code>/newbot</code> を実行してトークンをコピーします。
     </div>
 
-    <label>Discord bot token (optional)</label>
+    <label>Discordボットトークン（オプション）</label>
     <input id="discordToken" type="password" placeholder="Bot token" />
     <div class="muted" style="margin-top: 0.25rem">
-      Get it from the Discord Developer Portal: create an application, add a Bot, then copy the Bot Token.<br/>
-      <strong>Important:</strong> Enable <strong>MESSAGE CONTENT INTENT</strong> in Bot → Privileged Gateway Intents, or the bot will crash on startup.
+      Discord Developer Portalから取得：アプリケーションを作成し、Botを追加して、Botトークンをコピーします。<br/>
+      <strong>重要：</strong> Bot → Privileged Gateway Intents で <strong>MESSAGE CONTENT INTENT</strong> を有効にしてください。設定しないとBotが起動時にクラッシュします。
     </div>
 
-    <label>Slack bot token (optional)</label>
+    <label>Slackボットトークン（オプション）</label>
     <input id="slackBotToken" type="password" placeholder="xoxb-..." />
 
-    <label>Slack app token (optional)</label>
+    <label>Slackアプリトークン（オプション）</label>
     <input id="slackAppToken" type="password" placeholder="xapp-..." />
   </div>
 
   <div class="card">
-    <h2>2b) Advanced: Custom OpenAI-compatible provider (optional)</h2>
-    <p class="muted">Add a custom provider that uses OpenAI-compatible API (e.g., local LLM, proxy service). This provider will be merged with built-in providers.</p>
+    <h2>2b) 詳細設定：カスタムOpenAI互換プロバイダー（オプション）</h2>
+    <p class="muted">OpenAI互換APIを使用するカスタムプロバイダーを追加します（例：ローカルLLM、プロキシサービス）。このプロバイダーは組み込みプロバイダーとマージされます。</p>
 
-    <label>Provider ID</label>
+    <label>プロバイダーID</label>
     <input id="customProviderId" type="text" placeholder="my-custom-provider" />
     <div class="muted" style="margin-top: 0.25rem">
-      Alphanumeric, underscores, and dashes only (e.g., "ollama", "local-llm", "my_proxy").
+      英数字、アンダースコア、ダッシュのみ使用可（例："ollama"、"local-llm"、"my_proxy"）。
     </div>
 
-    <label>Base URL</label>
+    <label>ベースURL</label>
     <input id="customProviderBaseUrl" type="text" placeholder="https://api.example.com/v1" />
     <div class="muted" style="margin-top: 0.25rem">
-      Must include <code>/v1</code> suffix for OpenAI compatibility (e.g., "http://localhost:11434/v1").
+      OpenAI互換のため <code>/v1</code> サフィックスを含める必要があります（例："http://localhost:11434/v1"）。
     </div>
 
-    <label>API Type</label>
+    <label>APIタイプ</label>
     <select id="customProviderApi">
-      <option value="">-- Select API type --</option>
+      <option value="">-- APIタイプを選択 --</option>
       <option value="openai-completions">openai-completions</option>
       <option value="openai-responses">openai-responses</option>
     </select>
 
-    <label>API Key Environment Variable (optional)</label>
+    <label>APIキー環境変数（オプション）</label>
     <input id="customProviderApiKeyEnv" type="text" placeholder="MY_PROVIDER_API_KEY" />
     <div class="muted" style="margin-top: 0.25rem">
-      Environment variable name containing the API key (e.g., "OLLAMA_API_KEY"). Must be uppercase with underscores. Leave empty for unauthenticated providers.
+      APIキーを含む環境変数名（例："OLLAMA_API_KEY"）。大文字とアンダースコアを使用してください。認証不要のプロバイダーは空白のままにしてください。
     </div>
 
-    <label>Model ID (optional)</label>
+    <label>モデルID（オプション）</label>
     <input id="customProviderModelId" type="text" placeholder="llama3.2" />
     <div class="muted" style="margin-top: 0.25rem">
-      Default model to use with this provider (e.g., "llama3.2", "gpt-4"). Can be overridden later.
+      このプロバイダーで使用するデフォルトモデル（例："llama3.2"、"gpt-4"）。後から変更可能です。
     </div>
   </div>
 
   <div class="card">
-    <h2>3) Run onboarding</h2>
-    <button id="run">Run setup</button>
-    <button id="pairingApprove" class="secondary-button">Approve pairing</button>
-    <button id="reset" class="tertiary-button">Reset setup</button>
+    <h2>3) オンボーディングを実行</h2>
+    <button id="run">セットアップを実行</button>
+    <button id="pairingApprove" class="secondary-button">ペアリングを承認</button>
+    <button id="reset" class="tertiary-button">セットアップをリセット</button>
     <pre id="log"></pre>
-    <p class="muted">Reset deletes the Openclaw config file so you can rerun onboarding. Pairing approval lets you grant DM access when dmPolicy=pairing.</p>
-    
+    <p class="muted">リセットするとOpenclawの設定ファイルが削除され、オンボーディングを再実行できます。ペアリング承認はdmPolicy=pairingの場合にDMアクセスを許可します。</p>
+
     <details style="margin-top: 1rem;">
-      <summary style="cursor: pointer; font-weight: bold;">Device Pairing Helper</summary>
+      <summary style="cursor: pointer; font-weight: bold;">デバイスペアリングヘルパー</summary>
       <div style="margin-top: 0.75rem;">
-        <p class="muted">Approve pending device connection requests when using device pairing authentication.</p>
-        <button id="devicesRefresh">Refresh pending devices</button>
+        <p class="muted">デバイスペアリング認証を使用する場合、保留中のデバイス接続リクエストを承認します。</p>
+        <button id="devicesRefresh">保留中のデバイスを更新</button>
         <div id="devicesList" style="margin-top: 0.75rem;"></div>
       </div>
     </details>
@@ -204,17 +204,17 @@
 
   <footer style="margin-top: 3rem; padding: 2rem 1rem 1rem; border-top: 2px solid #ddd; text-align: center;">
     <div style="max-width: 600px; margin: 0 auto;">
-      <h3 style="margin-top: 0; font-size: 1.1rem;">Need Help?</h3>
-      <p class="muted" style="margin-bottom: 1rem;">Get support from the community and contributors</p>
+      <h3 style="margin-top: 0; font-size: 1.1rem;">サポートが必要ですか？</h3>
+      <p class="muted" style="margin-bottom: 1rem;">コミュニティとコントリビューターからサポートを受ける</p>
       <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
         <a href="https://github.com/codetitlan/moltbot-railway-template/issues/new" target="_blank" style="text-decoration: none;">
-          📝 Report an Issue
+          📝 問題を報告
         </a>
         <a href="https://discord.gg/openclaw" target="_blank" style="text-decoration: none;">
-          💬 Discord Community
+          💬 Discordコミュニティ
         </a>
         <a href="https://github.com/codetitlan/moltbot-railway-template#readme" target="_blank" style="text-decoration: none;">
-          📚 Documentation
+          📚 ドキュメント
         </a>
       </div>
       <p class="muted" style="margin-top: 1.5rem; font-size: 0.85em;">
