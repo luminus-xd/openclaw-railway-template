@@ -2053,10 +2053,10 @@ proxy.on("proxyReq", (proxyReq, req, res) => {
   proxyReq.setHeader("Authorization", `Bearer ${OPENCLAW_GATEWAY_TOKEN}`);
 });
 
-// Log WebSocket upgrade proxy events (token is injected via headers option in server.on("upgrade"))
-proxy.on("proxyReqWs", (proxyReq, req, socket, options, head) => {
-  console.log(`[proxy-event] WebSocket proxyReqWs event fired for ${req.url}`);
-  console.log(`[proxy-event] Headers:`, JSON.stringify(proxyReq.getHeaders()));
+// Inject auth token into WebSocket upgrade requests via proxyReqWs event
+proxy.on("proxyReqWs", (proxyReq, req) => {
+  proxyReq.setHeader("Authorization", `Bearer ${OPENCLAW_GATEWAY_TOKEN}`);
+  debug(`[proxy] WS ${req.url} - injecting token: ${OPENCLAW_GATEWAY_TOKEN.slice(0, 16)}...`);
 });
 
 app.use(async (req, res) => {
